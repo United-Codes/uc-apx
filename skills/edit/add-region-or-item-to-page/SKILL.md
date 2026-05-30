@@ -8,14 +8,14 @@ description: Add a region, page item, button, process, or branch to an existing 
 There are two paths:
 
 1. **Use the CLI** — seven command families splice new constructs into an existing page's `.apx` and reparse to validate:
-   - `uc-apx create region <type>` for `form`, `static-content`, `classic-report`, `interactive-grid`, `interactive-report`, `cards`, `chart`, `faceted-search`.
+   - `uc-apx create region <type>` for `form`, `static-content`, `classic-report`, `interactive-grid`, `interactive-report`, `cards`, `chart`, `faceted-search`, plus the Universal-Theme **theme template components** `avatar`, `comments`, `content-row`, `timeline`, `metric-card`, `media-list`, and the layout helper `flexbox-container`. See [Theme template components](#theme-template-components).
    - `uc-apx create page-item <type>` for `text`, `select`, `hidden`, `switch`, `date`, `number`, `radio-group`, `checkbox-group`, `display-only`.
    - `uc-apx create button <kind>` for `redirect`, `cancel`, `submit`, `save`, `create`, `delete`.
    - `uc-apx create process plsql` for executeCode processes; `uc-apx create dynamic-action refresh-on-dialog-close` for the canonical post-modal DA.
    - `uc-apx create validation` for page validations (10 MMD shapes — `function-body-boolean`, `plsql-expression`, `sql-expression`, `regexp`, `not-null`, `numeric`, `valid-date`, `valid-timestamp`, `no-rows-returned`, `rows-returned`).
    - `uc-apx create computation` for page computations writing into a target item (`static-value`, `item`, `plsql-expression`, `function-body`, `sql-query`).
    - `uc-apx create branch` for after-submit page-navigation branches (anonymous; uniqueness by `execution.sequence`).
-   - `uc-apx edit column` for rewriting an existing IG / CR / IR column (type, LOV, default, readonly) without a hand-edit.
+   - `uc-apx edit column` for rewriting an existing IG / CR / IR column (type, LOV, default, readonly) without a hand-edit — including turning an **interactiveReport / interactiveGrid** column into an avatar or badge (`--type avatar|badge` + `--badge-*` / `--avatar-*`).
    See [Path A](#path-a-uc-apx-create-region-cli) below.
 2. **Hand-edit the `.apx` file** — for region types the CLI doesn't cover yet (`chart` variants, breadcrumb, …) and for non-plsql process types and dynamic-action scenarios beyond refresh-on-dialog-close. See [Path B](#path-b-hand-edit-playbook).
 
@@ -191,6 +191,46 @@ uc-apx --app-dir <root> create region faceted-search \
 - **`--force`** replaces both regions on collision (the FS id and the results id are checked separately). `--dry-run` prints both rendered blocks and leaves the file untouched.
 - **Facet columns must exist in the SQL projection.** The CLI doesn't cross-check — `apex validate --official` will catch any mismatch.
 
+### Theme template components
+
+Universal Theme ships a family of `type: themeTemplateComponent/<X>` regions that render a SQL result set through a pre-built template. Six are content components scaffolded by `uc-apx create region <component>` — all SQL-backed (`--sql` + `--column`, same column-spec syntax as classic-report), all rendering one entity per row (`componentAppearance.display: report`):
+
+| Component | Use it for | Required mappings | Avatar | Badge |
+|---|---|---|---|---|
+| `avatar` | one image/initials/icon per row (people, logos) | `--avatar-type image\|initials\|icon` + matching source | — | — |
+| `comments` | threaded discussion / status feed | `--comment-text-column --user-name-column --date-column` | plugin (`--avatar-type` initials\|icon) | — |
+| `content-row` | rich list rows with primary actions | `--title-column --description-column` | plugin (`--avatar-icon` / initials) | plugin |
+| `timeline` | chronological events | `--user-name-column --date-column --title-column --description-column` | settings flag | plugin |
+| `metric-card` | KPI tiles | `--title-column --metric-column --meta-column` | plugin | plugin |
+| `media-list` | compact item list with sort | `--title-column --description-column` | plugin (`--avatar-icon`) | plugin |
+
+**Choosing a component:** showing a person/identity → `avatar`; a discussion → `comments`; KPI numbers → `metric-card`; time-ordered events → `timeline`; a rich row list with an avatar + actions → `content-row`; a lighter list with optional sort → `media-list`.
+
+Shared optional flags across all six: `--display-avatar` / `--display-badge` (turn the decorations on — **a displayed badge requires `--badge-label` + `--badge-value-column`**), `--pagination-rows N`, `--slot`, `--column-span`, `--no-new-row`, `--id`, `--pk-column`, `--dry-run`, `--force`. Example:
+
+```bash
+uc-apx --app-dir <root> create region timeline \
+    --page <id> --name "Activity" \
+    --sql "select id, who, when_at, what, descr, color from events" \
+    --column "ID:number,WHO,WHEN_AT:date,WHAT,DESCR,COLOR" --pk-column ID \
+    --user-name-column WHO --date-column WHEN_AT --title-column WHAT --description-column DESCR \
+    --display-badge --badge-label Status --badge-value-column COLOR --badge-state-column COLOR
+```
+
+**Badge has no standalone region** — it only renders as a report column. **Avatar and badge double as IR/IG columns**: use `uc-apx edit column --page <p> --region <r> --column <C> --type badge --badge-label … --badge-value-column …` (or `--type avatar --avatar-type initials --avatar-initials-column …`). The badge/avatar column type is only valid on `interactiveReport` / `interactiveGrid` regions — on a `classicReport` column the same look is a hand-edited `columnFormatting.htmlExpression` with `{with/}…{apply THEME$BADGE/}` (the CLI steers you there if you try).
+
+### `flexbox-container` — a layout helper, not a content component
+
+`uc-apx create region flexbox-container` scaffolds a `themeTemplateComponent/flexboxContainer` region: a **layout-only** container (no SQL, no columns, `display: regionOnly`) that arranges its **child** regions in a flex row or column. Reach for it whenever the default 12-column grid fights you — to put regions **side by side with equal height**, stack them in a gapped column, or let them **wrap responsively**:
+
+```bash
+uc-apx --app-dir <root> create region flexbox-container \
+    --page <id> --name "Cards Row" \
+    --direction row --gap lg --align-items stretch --flex-behavior growIfNeeded
+```
+
+Flags map straight to `settings`: `--direction row|column`, `--gap sm|md|lg`, `--align-items start|center|end|stretch`, `--justify-content start|center|end|spaceBetween`, `--wrap wrap|noWrap`, `--flex-behavior growIfNeeded`. After creating it, point the child regions at it by setting their `layout.parentRegion: @<container-id>` and `slot: subRegions` (a hand-edit, or pass `--slot subRegions` when creating the children once the container exists). It's a good default for grouping metric-cards, charts, or any set of regions you want laid out as a clean responsive row instead of grid columns.
+
 ### Page items (`uc-apx create page-item <type>`)
 
 Add a single input/display field to an **existing region** on a page. The item is rendered as a direct page child with `layout.region: @<region-id>`. ID convention: `P<page-id>_<NAME>` (override with `--id`).
@@ -326,6 +366,8 @@ Sibling to `create link-column`: switch a column's `type:`, attach an LOV, splic
 | `--default-static <value>` | Wipe + rewrite `default { type: static; staticValue: <value> }`. |
 | `--readonly` | Add (or upsert) `readOnly { type: always }`. |
 | `--query-only` | Tri-state. `--query-only` adds `source.queryOnly: true` (column is read on query, skipped on insert/update — required for identity-generated PKs to avoid `ORA-32795`). `--query-only=false` removes the property. Omit the flag to leave it untouched. |
+| `--badge-label` / `--badge-value-column` / `--badge-state-column` / `--badge-icon` | Turn the column into a badge (`type: themeTemplateComponent/badge` + a wiped-and-rewritten `settings { label, value, state, icon }`). Implies `--type badge`. Label + value are mandatory. **IR / IG only** (classicReport uses an htmlExpression hand-edit). |
+| `--avatar-type` / `--avatar-initials-column` / `--avatar-image-column` / `--avatar-icon` / `--avatar-css-classes` | Turn the column into an avatar (`type: themeTemplateComponent/avatar` + `settings`). Implies `--type avatar`. Mutually exclusive with the `--badge-*` flags. **IR / IG only**. |
 
 ```bash
 # Editable IG over a per-user table: default USERNAME to v('APP_USER')
