@@ -38,7 +38,7 @@ uc-apx create page --id <n> --name <name> --type <type> [flags] [--app-dir <path
 | `--alias`      | uppercase slug of `--name`  | e.g. `Employee Details` → `EMPLOYEE-DETAILS`                                  |
 | `--title`      | `--name`                    | Browser / breadcrumb title                                                    |
 | `--file`       | `pages/p<NNNNN>-<slug>.apx` | Relative to `--app-dir`                                                       |
-| `--page-group` | omitted                     | Alias (no `@`) of a pageGroup; injected as `pageGroup: @<ref>`                |
+| `--page-group` | omitted                     | Id **or display name** of an existing pageGroup; injected as `pageGroup: @<id>`. **Validated** — an unknown group is rejected (create it first with `uc-apx create page-group <id> --name <Display>`). A display-name input is normalized to the group id. |
 | `--table`      | omitted (required for `form`) | Applies **only** to `--type form`. Rejected on `blank` / `classic-report` / `interactive-report` / `interactive-grid` / `dashboard` / `modal-dialog` with a pointer at the per-region scaffolder — those page templates ship bare-shell and pick up their tables later via `uc-apx create region <type>`. |
 | `--dry-run`    | false                       | Print rendered content, do not write                                          |
 | `--force`      | false                       | Overwrite existing target file. Does **not** bypass duplicate-id check.       |
@@ -85,6 +85,20 @@ uc-apx create page --id 43 --name "Department Form" --type form --table DEPT
 ```bash
 uc-apx create page --id 100 --name "Settings" --type blank --alias SETTINGS --page-group administration
 ```
+
+### Managing page groups
+
+`--page-group` is validated, so the group must exist first. The full page-group lifecycle:
+
+```bash
+uc-apx page-groups                                  # see groups + members + the ungrouped bucket
+uc-apx create page-group administration --name "Administration"   # define a new group
+uc-apx edit page --page 100 --page-group administration           # assign/move an existing page
+uc-apx edit page --page 100 --clear-page-group                    # remove a page's group
+uc-apx delete page-group administration              # remove the group (blocks if pages still reference it)
+```
+
+Assign and clear accept the group id **or** display name; a name is normalized to the id in the written `pageGroup: @<id>` reference.
 
 **Blank modal dialog (non-form modal, e.g. confirmation):**
 

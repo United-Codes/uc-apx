@@ -20,7 +20,7 @@ The user gives you a symptom; you need to find the apexlang construct(s) respons
 | Command | Use it when |
 |---|---|
 | `uc-apx search <term>` | You have a string (column name, SQL keyword, button label, JS variable) but don't know where it appears. |
-| `uc-apx component <id\|name>` | You have an exact identifier and want the full property tree. |
+| `uc-apx component <id\|name>` | You have an exact identifier and want the component's properties + a list of its children. Add `--detail` for the full recursive property tree. |
 | `uc-apx refs <id>` | You have a shared component (LOV, list, authorization) and want to see who uses it. |
 | `uc-apx deps <id>` | You want the dependency graph in both directions (upstream + downstream). |
 
@@ -81,7 +81,7 @@ By step 2 you have the file + line + SQL text and can decide whether the bug is 
 
 - **Don't trust the first search hit.** If the keyword is generic, scroll all results before drilling into one.
 - **`@aliasName` only works in `refs` if the alias is the construct's `ID`.** If a region's name is `Sales History` but its ID is `APEX$1234...`, `uc-apx refs "Sales History"` won't find usages — pass the ID instead.
-- **Component dumps can be huge.** Pipe to `jq '.properties'` (or similar) when only a slice matters — default output is already JSON, so no flag needed: `uc-apx component <id> | jq '.properties'`.
+- **Component dumps can be huge — that's what the default summary avoids.** `uc-apx component <id>` shows the node's own properties plus its immediate children as stubs (kind/id/name/type + a `components` descendant count); reach for `--detail` only when you actually need the full recursive tree. Either way you can still slice with `jq '.properties'`.
 - **For pages, prefer `uc-apx page` over `uc-apx component`.** Both work, but `page` returns the more structured shape with regions/items/buttons broken out.
 
 ## Reference

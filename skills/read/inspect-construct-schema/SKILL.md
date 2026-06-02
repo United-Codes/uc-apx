@@ -1,11 +1,11 @@
 ---
 name: inspect-construct-schema
-description: Use `uc-apx schema <kind>` to discover what properties, blocks, child kinds, and block-paths are conventional for an apexlang construct in this app. Use before hand-editing a region, pageItem, button, process, etc. to learn what property names and structures other instances use, so your edit matches existing patterns instead of inventing keys the validator will reject.
+description: Use `uc-apx shape <kind>` to discover what properties, blocks, child kinds, and block-paths are conventional for an apexlang construct in this app. Use before hand-editing a region, pageItem, button, process, etc. to learn what property names and structures other instances use, so your edit matches existing patterns instead of inventing keys the validator will reject.
 ---
 
 # Inspecting the schema of an apexlang construct kind
 
-`uc-apx schema <kind>` scans every instance of `<kind>` in the app and reports the union of properties, blocks, child kinds, and block-paths seen — each with a count of how many instances use it. It's the right tool when you're about to hand-edit a construct and want to know what's idiomatic *in this app*.
+`uc-apx shape <kind>` scans every instance of `<kind>` in the app and reports the union of properties, blocks, child kinds, and block-paths seen — each with a count of how many instances use it. It's the right tool when you're about to hand-edit a construct and want to know what's idiomatic *in this app*.
 
 ## When to use this skill
 
@@ -13,12 +13,12 @@ description: Use `uc-apx schema <kind>` to discover what properties, blocks, chi
 - You're adding a feature (e.g. "let this region paginate") and want to find an existing instance that uses the relevant block (`pagination`) so you can pattern-match.
 - You want to know how rare or common a property is — common ones (count ≈ total instances) are required/default; rare ones are opt-in.
 
-**Do not** use this skill to discover the **database schema** of tables the app reads. The command is named "schema" but it inspects apexlang-construct shape, not Oracle table columns.
+**Do not** use this skill to discover the **database schema** of tables the app reads. The `shape` command inspects apexlang-construct shape, not Oracle table columns.
 
 ## Synopsis
 
 ```bash
-uc-apx schema <kind> --app-dir <root>
+uc-apx shape <kind> --app-dir <root>
 ```
 
 Output shape:
@@ -62,7 +62,7 @@ blockProperties:
 
 ```bash
 # 1. What does a region typically have?
-uc-apx schema region --app-dir <root>
+uc-apx shape region --app-dir <root>
 
 # 2. Find an existing instance using the block you want to copy.
 uc-apx search pagination --app-dir <root>
@@ -78,7 +78,7 @@ uc-apx validate --app-dir <root>
 
 ```bash
 # Step 1: confirm chart-related constructs exist in this app.
-uc-apx schema region --app-dir examples/brookstrut
+uc-apx shape region --app-dir examples/brookstrut
 # → blocks include "chart", "chartLayout", "legend"; childKinds include "axis", "series", "layer"
 
 # Step 2: find a real chart region to copy from.
@@ -106,7 +106,7 @@ uc-apx component <id> --app-dir examples/brookstrut
 Default output is minified JSON — pipe directly to `jq` without any flag:
 
 ```bash
-uc-apx schema region --app-dir <root> | jq '.blockProperties[] | select(.count == 142)'
+uc-apx shape region --app-dir <root> | jq '.blockProperties[] | select(.count == 142)'
 ```
 
 Returns block-properties present on every region (always-set conventions). Use `--json-pretty` for human-readable inspection without `jq`.
@@ -115,9 +115,9 @@ Returns block-properties present on every region (always-set conventions). Use `
 
 - **Schema is per-app, not per-MMD.** It reflects how *this* app is built, not the full set of valid APEX properties. For full-schema validation, use `uc-apx validate --official`.
 - **Don't assume a block-property is required just because count == instanceCount.** It might be that all current instances coincidentally set it. Confirm against the official validator if in doubt.
-- **Don't `uc-apx schema` to discover DB-table schema.** That's not what it does. To see what tables/columns the app references in queries, use `uc-apx search <TABLE_NAME>` or read the relevant `source.sqlQuery` blocks directly.
+- **Don't `uc-apx shape` to discover DB-table schema.** That's not what it does. To see which database **objects** (tables, views, packages, …) the app references across all its SQL/PL-SQL, use `uc-apx schema` (see [analyze-db-dependencies](../analyze-db-dependencies/SKILL.md)).
 
 ## Reference
 
-- Schema source: [cmd/schema.go](../../../cmd/schema.go)
+- Schema source: [cmd/shape.go](../../../cmd/shape.go)
 - Validation: [skills/verify/validate-after-edit/SKILL.md](../../verify/validate-after-edit/SKILL.md)

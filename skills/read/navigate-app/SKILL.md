@@ -24,9 +24,13 @@ When you land in an apexlang project (`.apx` files, usually with `application.ap
 First question?
 ├── "What's this app?"             → uc-apx overview
 ├── "What pages exist?"            → uc-apx pages
+├── "How are pages grouped?"       → uc-apx page-groups
+│    "Which pages have no group?"      (ungrouped bucket in the same output)
 ├── "What's on page N?"            → uc-apx tree N        (structure)
 │                                    uc-apx page N        (full detail)
 ├── "What LOVs / lists / ... ?"    → uc-apx list <kind>
+├── "What auth schemes / who's    → uc-apx auth schemes|usage|audit
+│    protected?"                       (see skills/read/audit-authorization)
 └── "Where is component X?"        → uc-apx component <id-or-name>
 ```
 
@@ -50,6 +54,22 @@ uc-apx pages --app-dir <root>
 
 Returns one row per page with `id`, `name`, `alias`, `title`, `file`, and total component count. Skim this to find candidate pages by name/alias.
 
+Filter by page-group membership:
+
+```bash
+uc-apx pages --page-group reports     # only pages in the "reports" group (id or display name)
+uc-apx pages --ungrouped              # only pages that belong to no group
+```
+
+### Page groups — group membership at a glance
+
+```bash
+uc-apx page-groups --app-dir <root>
+uc-apx page-groups reports            # just one group (id or display name)
+```
+
+Returns every defined group with its member pages plus an `ungrouped` bucket. A group with no members is flagged `"empty": true`; a page that references a group not defined in `page-groups.apx` surfaces as a `"phantom": true` group — a broken reference worth fixing. The `--page-group`/`--ungrouped` filters also work on `uc-apx search <term>` and `uc-apx list page` (they drop non-page matches).
+
 ### Tree — one page's structure
 
 ```bash
@@ -61,10 +81,11 @@ Returns a compact hierarchical view: regions → their items/buttons → child r
 ### Page — full page detail
 
 ```bash
-uc-apx page <id|alias|name> --app-dir <root>
+uc-apx page <id|alias|name> --app-dir <root>           # summary: components as stubs + counts
+uc-apx page <id|alias|name> --detail --app-dir <root>  # full recursive property tree
 ```
 
-Returns everything: regions, page items, buttons, processes, computations, validations, branches, dynamic actions, plus flattened properties. Use after `tree` once you've picked the page you care about.
+Summary-by-default: the page's properties plus its components (regions, page items, buttons, processes, computations, validations, branches, dynamic actions) each listed as a stub with a `components` descendant count. Add `--detail` for the full flattened property tree of every component. Use after `tree` once you've picked the page you care about.
 
 ### List — enumerate shared components
 
@@ -78,10 +99,11 @@ Use to inventory what shared resources the app already provides before you propo
 ### Component — fetch any node
 
 ```bash
-uc-apx component <id|name> --app-dir <root>
+uc-apx component <id|name> --app-dir <root>            # node properties + child stubs
+uc-apx component <id|name> --detail --app-dir <root>   # full recursive tree
 ```
 
-Returns the full component tree (children + flattened properties) for any APEX$<digits> id or human name. The general "I know exactly what I want" lookup.
+The general "I know exactly what I want" lookup, for any APEX$<digits> id or human name. Summary-by-default: the node's own flattened properties plus its immediate children as stubs (kind/id/name/type + a `components` count). Add `--detail` for the full recursive tree.
 
 ## Worked example — orienting in `examples/brookstrut`
 

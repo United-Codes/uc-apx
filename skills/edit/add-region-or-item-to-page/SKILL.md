@@ -420,7 +420,7 @@ For region types not yet covered by the CLI (`chart` variants beyond cartesian +
 
 ```
 1. Locate the page file              → uc-apx pages | uc-apx page <id>
-2. Inspect the construct kind        → uc-apx schema region (or pageItem, button, …)
+2. Inspect the construct kind        → uc-apx shape region (or pageItem, button, …)
 3. Find a similar existing instance  → uc-apx search; uc-apx component <id>
 4. Hand-edit the page .apx           → Read + Edit
 5. Validate                          → uc-apx validate (--official if SQLcl is present)
@@ -438,10 +438,10 @@ The file is `pages/pNNNNN-<slug>.apx`. All sub-page constructs live inside that 
 ### Step 2: inspect the construct kind
 
 ```bash
-uc-apx schema region --app-dir <root>
-uc-apx schema pageItem --app-dir <root>
-uc-apx schema button --app-dir <root>
-uc-apx schema process --app-dir <root>
+uc-apx shape region --app-dir <root>
+uc-apx shape pageItem --app-dir <root>
+uc-apx shape button --app-dir <root>
+uc-apx shape process --app-dir <root>
 ```
 
 Each report shows the properties and blocks instances of that kind use in this app. Properties with `count == instanceCount` are conventional and you probably want them too. See [skills/read/inspect-construct-schema/SKILL.md](../../read/inspect-construct-schema/SKILL.md).

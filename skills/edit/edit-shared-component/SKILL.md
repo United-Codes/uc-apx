@@ -12,7 +12,7 @@ Shared components live in `shared-components/*.apx` and are referenced from page
 - New entry under an existing breadcrumb → `uc-apx create breadcrumb-entry --page <n> --label <Label> [--parent <entry-id>]`
 - New top-level list → `uc-apx create list --name <Name>`
 - New entry under an existing list → `uc-apx create list-entry --list <id> --label <Label> --page <n>` (or `--url <url>`)
-- New authorization scheme → `uc-apx create authorization --name <Name> --type <plSqlFunctionBody|existsSqlQuery|...> --body <code>` (or `--names <role>` for role-based types)
+- Authorization (new scheme, editing one, or applying it) → see [skills/edit/edit-authorization/SKILL.md](../edit-authorization/SKILL.md) (`uc-apx create/edit authorization`, `uc-apx edit <kind> --authz`)
 
 This skill is the hand-edit playbook for the cases the CLI doesn't scaffold yet (authentications, app-items, page-groups, modifying an existing LOV's entries, etc.).
 
@@ -30,14 +30,14 @@ This skill is the hand-edit playbook for the cases the CLI doesn't scaffold yet 
 - The user wants a new LOV → `uc-apx create lov`.
 - The user wants a new breadcrumb or a new entry under an existing breadcrumb → `uc-apx create breadcrumb` / `uc-apx create breadcrumb-entry`.
 - The user wants a new list or a new list entry → `uc-apx create list` / `uc-apx create list-entry`.
-- The user wants a new authorization scheme → `uc-apx create authorization`.
+- The user wants to create, edit, or apply an authorization scheme → [skills/edit/edit-authorization/SKILL.md](../edit-authorization/SKILL.md).
 - The change is to a page (`pages/*.apx`) — use [skills/edit/add-region-or-item-to-page/SKILL.md](../add-region-or-item-to-page/SKILL.md).
 - The user wants to create an entire new page — use [skills/edit/create-page/SKILL.md](../create-page/SKILL.md).
 
 ## The 4-step hand-edit playbook
 
 ```
-1. Discover existing instances     → uc-apx schema <kind>, uc-apx list <kind>
+1. Discover existing instances     → uc-apx shape <kind>, uc-apx list <kind>
 2. Pick a similar one as template  → uc-apx component <id>
 3. Hand-edit the .apx file         → Read + Edit
 4. Validate                        → uc-apx validate (--official if SQLcl is present)
@@ -49,7 +49,7 @@ Before adding a new LOV, list, etc., see what's already there:
 
 ```bash
 uc-apx list lov --app-dir <root>           # all LOVs by name + file
-uc-apx schema lov --app-dir <root>         # which properties/blocks LOVs use in this app
+uc-apx shape lov --app-dir <root>         # which properties/blocks LOVs use in this app
 ```
 
 If you don't pattern-match against an existing instance, the chance of inventing a property name the validator rejects is high.
@@ -183,7 +183,7 @@ entry APEX$<unique-digits> (
 
 ## Common pitfalls
 
-- **Don't invent property names.** Always pattern-match against an existing instance from `uc-apx schema` or `uc-apx component`.
+- **Don't invent property names.** Always pattern-match against an existing instance from `uc-apx shape` or `uc-apx component`.
 - **`sequence:` matters.** Lists, breadcrumbs, and LOV entries render in sequence order. Pick a value that places yours where the user expects.
 - **`@aliasName` references must resolve.** If you reference `@home` but no list/breadcrumb entry with id `home` exists, validate will flag `brokenReference`.
 - **Don't hand-edit `.apex/apexlang.json`.** Never touch the `mmdVersion` file.

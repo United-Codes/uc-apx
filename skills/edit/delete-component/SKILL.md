@@ -1,6 +1,6 @@
 ---
 name: delete-component
-description: Remove a region, page item, button, process, dynamic action, computation, validation, branch, column, lov, list, breadcrumb, authorization, list/breadcrumb entry, or whole page from an apexlang app. Use when the user asks to "delete", "remove", "drop", "get rid of", or "prune" any existing apexlang construct. The `uc-apx delete` family handles every kind; never hand-edit `.apx` files for deletion.
+description: Remove a region, page item, button, process, dynamic action, computation, validation, branch, column, lov, list, breadcrumb, authorization, page group, list/breadcrumb entry, or whole page from an apexlang app. Use when the user asks to "delete", "remove", "drop", "get rid of", or "prune" any existing apexlang construct. The `uc-apx delete` family handles every kind; never hand-edit `.apx` files for deletion.
 ---
 
 # Deleting components from an apexlang app
@@ -43,6 +43,7 @@ Use `--dry-run` first whenever you're not 100% sure what will go.
 | a shared-component list | `uc-apx delete list <id-or-name>` | — |
 | a shared-component breadcrumb | `uc-apx delete breadcrumb <id-or-name>` | — |
 | a shared-component authorization scheme | `uc-apx delete authorization <id-or-name>` | — |
+| a page group | `uc-apx delete page-group <id-or-name>` | — (blocks while pages still reference it; clear them first with `uc-apx edit page --clear-page-group`) |
 | a list entry | `uc-apx delete list-entry <id>` | `--list <l>` (defaults to the only list if unambiguous) |
 | a breadcrumb entry | `uc-apx delete breadcrumb-entry <id>` | `--breadcrumb <b>` (defaults to the only breadcrumb if unambiguous) |
 
